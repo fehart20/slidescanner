@@ -1,0 +1,17 @@
+[Unit]
+Description=Slide Projector Control Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/bin/bash -c 'source /home/xx/slidescanner/.venv/bin/activate && exec python /home/xx/slidescanner/picam.py'
+WorkingDirectory=/home/xx/slidescanner/
+Restart=always
+User=xx
+Group=xx
+
+# Ensure GPIO cleanup on stop
+ExecStop=/usr/bin/python3 -c "import RPi.GPIO as GPIO; GPIO.cleanup()"
+
+[Install]
+WantedBy=multi-user.target
