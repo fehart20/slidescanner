@@ -39,7 +39,9 @@ I take no credit for this.  This is entirely the work of Phil Ivers who posted o
 
 1. Download and install [digiCamControl](http://digicamcontrol.com/)
 1. In digiCamControl options, enable webserver.  Leave on default port 5513.  This sets up a webserver to allow digiCamControl to be remotely controlled over RESTful URLs.
-1. SCP `picam.py` file over to the Pi board
+1. SCP `picam.py` and `requirements.txt` file over to the Pi board
+1. Create virtual environment: `python -m venv .venv` and enter it `source .venv/bin/activate`
+1. Install requirements: `pip install -r requirements.txt`
 1. Run python script (`python picam.py`)
 1. Either:
     * In another terminal (tmux/screen/byobu) run: `curl  http://localhost:8080/advance/<IP of digiCamControl machine>/1`
