@@ -16,6 +16,7 @@ RELAY_PIN = 2
 # Setup GPIO mode
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(RELAY_PIN, GPIO.OUT)
+GPIO.output(RELAY_PIN, GPIO.HIGH)  # Ensure relay is off at script start
 
 # Flag to indicate if the system is currently capturing
 is_capturing = threading.Lock()
