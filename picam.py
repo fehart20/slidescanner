@@ -20,6 +20,21 @@ GPIO.setup(RELAY_PIN, GPIO.OUT)
 # Flag to indicate if the system is currently capturing
 is_capturing = threading.Lock()
 
+def is_digicam_available(digi_cam_ip):
+    test_url = f"http://{digi_cam_ip}:5513/?CMD=Ping"
+    try:
+        logging.info(f"Checking availability of DigiCamControl at {test_url}")
+        response = requests.get(test_url, timeout=5)
+        if response.status_code == 200:
+            logging.info("DigiCamControl is available.")
+            return True
+        else:
+            logging.warning(f"DigiCamControl returned unexpected status: {response.status_code}")
+            return False
+    except requests.RequestException as e:
+        logging.error(f"Error checking DigiCamControl availability: {e}")
+        return False
+
 def advance_slide(digi_cam_ip, loops):
     for loop in range(0, int(loops)):
         logging.info(f"Advancing slide {loop + 1} of {loops}")
@@ -48,7 +63,7 @@ def advance_slide(digi_cam_ip, loops):
         # Wait for the image to transfer from the camera to the computer
         time.sleep(2)
 
-    logging.info("Slide advancement process completed.")
+    logging.info("Slide capturing process completed.")
     return "Finished", 200
 
 @app.route('/advance/<digi_cam_ip>/<int:loops>', methods=['GET'])
@@ -56,6 +71,10 @@ def advance(digi_cam_ip, loops):
     if is_capturing.locked():
         logging.warning("Request rejected: System is currently capturing.")
         return jsonify({"error": "System is currently capturing."}), 409
+
+    if not is_digicam_available(digi_cam_ip):
+        logging.error("Request rejected: DigiCamControl is not available.")
+        return jsonify({"error": "DigiCamControl is not available."}), 503
 
     def capture_task():
         with is_capturing:
