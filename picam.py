@@ -82,7 +82,7 @@ def advance(digi_cam_ip, loops):
 
     logging.info("Starting capture thread.")
     threading.Thread(target=capture_task, daemon=True).start()
-    return jsonify({"message": "Capture process started successfully."}), 200
+    return jsonify({"message": "Capture process started successfully.", "capture_count": f"{loops}"}), 200
 
 if __name__ == "__main__":
     try:
