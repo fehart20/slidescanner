@@ -48,7 +48,7 @@ def advance_slide(digi_cam_ip, loops):
         GPIO.output(RELAY_PIN, GPIO.LOW)
 
         # Wait for the projector to advance the slide
-        time.sleep(2.5)
+        time.sleep(1.5)
 
         # Trigger the camera capture via the DigiCamControl web service
         capture_url = f"http://{digi_cam_ip}:5513/?CMD=Capture"
@@ -62,7 +62,7 @@ def advance_slide(digi_cam_ip, loops):
             return f"Error capturing image: {e}", 500
 
         # Wait for the image to transfer from the camera to the computer
-        time.sleep(0.5)
+        time.sleep(2)
 
     logging.info("Slide capturing process completed.")
     return "Finished", 200
