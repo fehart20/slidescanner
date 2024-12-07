@@ -125,10 +125,12 @@
                 connectionStatus.classList.remove("disconnected");
                 connectionStatus.classList.add("connected");
                 statusText.textContent = "Connected";
+                console.log("WebSocket connected. Listening ...");
             } else {
                 connectionStatus.classList.remove("connected");
                 connectionStatus.classList.add("disconnected");
                 statusText.textContent = "Disconnected";
+                console.error("WebSocket disconnected.");
             }
         }
 
