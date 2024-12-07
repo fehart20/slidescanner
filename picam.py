@@ -119,6 +119,10 @@ def slide_back():
     GPIO.output(RELAY_PIN, GPIO.HIGH)
     return jsonify({"message": "Slide moved backward successfully."}), 200
 
+@socketio.on('ping_server')
+def handle_ping():
+    emit('pong', {'timestamp': time.time()})
+
 
 if __name__ == "__main__":
     try:
