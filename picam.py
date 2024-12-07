@@ -21,6 +21,10 @@ GPIO.output(RELAY_PIN, GPIO.HIGH)  # Ensure relay is off at script start
 # Flag to indicate if the system is currently capturing
 is_capturing = threading.Lock()
 
+# Flag to indicate if a task is requested to abort
+abort_event = threading.Event()
+
+
 def is_digicam_available(digi_cam_ip):
     test_url = f"http://{digi_cam_ip}:5513/?CMD=Ping"
     try:
@@ -36,8 +40,13 @@ def is_digicam_available(digi_cam_ip):
         logging.error(f"Error checking DigiCamControl availability: {e}")
         return False
 
+
 def advance_slide(digi_cam_ip, loops):
-    for loop in range(0, int(loops)):
+    for loop in range(int(loops)):
+        if abort_event.is_set():
+            logging.warning("Slide advancement process aborted.")
+            return "Aborted", 200
+
         logging.info(f"Advancing slide {loop + 1} of {loops}")
 
         # Activate the relay for 0.25 seconds to advance the projector
@@ -48,7 +57,7 @@ def advance_slide(digi_cam_ip, loops):
         GPIO.output(RELAY_PIN, GPIO.HIGH)
 
         # Wait for the projector to advance the slide
-        time.sleep(1.5)
+        time.sleep(4)
 
         # Trigger the camera capture via the DigiCamControl web service
         capture_url = f"http://{digi_cam_ip}:5513/?CMD=Capture"
@@ -64,8 +73,9 @@ def advance_slide(digi_cam_ip, loops):
         # Wait for the image to transfer from the camera to the computer
         time.sleep(2)
 
-    logging.info("Slide capturing process completed.")
+    logging.info("Slide advancement process completed.")
     return "Finished", 200
+
 
 @app.route('/advance/<digi_cam_ip>/<int:loops>', methods=['GET'])
 def advance(digi_cam_ip, loops):
@@ -77,13 +87,41 @@ def advance(digi_cam_ip, loops):
         logging.error("Request rejected: DigiCamControl is not available.")
         return jsonify({"error": "DigiCamControl is not available."}), 503
 
+    abort_event.clear()
+
     def capture_task():
         with is_capturing:
             advance_slide(digi_cam_ip, loops)
 
     logging.info("Starting capture thread.")
     threading.Thread(target=capture_task, daemon=True).start()
-    return jsonify({"message": "Capture process started successfully.", "capture_count": loops, "digicamcontroler_ip": digi_cam_ip}), 200
+    return jsonify({"message": "Capture process started successfully."}), 200
+
+
+@app.route('/abort', methods=['GET'])
+def abort():
+    if is_capturing.locked():
+        logging.info("Abort signal received.")
+        abort_event.set()
+        return jsonify({"message": "Capture process aborted successfully."}), 200
+    else:
+        logging.warning("Abort signal received, but no process is running.")
+        return jsonify({"error": "No process to abort."}), 400
+
+
+@app.route('/slide-back', methods=['GET'])
+def slide_back():
+    if is_capturing.locked():
+        logging.warning("Request rejected: System is currently capturing.")
+        return jsonify({"error": "System is currently capturing."}), 409
+
+    logging.info("Moving slide backward.")
+    GPIO.output(RELAY_PIN, GPIO.LOW)
+    time.sleep(0.75)
+    GPIO.output(RELAY_PIN, GPIO.HIGH)
+    logging.info("Slide moved backward successfully.")
+    return jsonify({"message": "Slide moved backward successfully."}), 200
+
 
 if __name__ == "__main__":
     try:
