@@ -129,12 +129,14 @@
                 connectionStatus.classList.add("connected");
                 statusText.textContent = "Connected";
                 startLatencyCheck();
+                console.info("WebSocket connected. Listening ...");
             } else {
                 connectionStatus.classList.remove("connected");
                 connectionStatus.classList.add("disconnected");
                 statusText.textContent = "Disconnected";
                 latencyText.textContent = "Latency: -- ms";
                 stopLatencyCheck();
+                console.error("WebSocket disconnected.");
             }
         }
 
