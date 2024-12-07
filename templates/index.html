@@ -102,6 +102,7 @@
         <!-- Connection Status -->
         <div id="connection-status" class="connection-status">
             <span id="status-text">Connecting...</span>
+            <span id="latency-text" style="margin-left: 10px;">Latency: -- ms</span>
         </div>
     </div>
 
@@ -119,18 +120,40 @@
 
         const connectionStatus = document.getElementById("connection-status");
         const statusText = document.getElementById("status-text");
+        const latencyText = document.getElementById("latency-text");
+        let pingInterval = null;
 
         function updateConnectionStatus(connected) {
             if (connected) {
                 connectionStatus.classList.remove("disconnected");
                 connectionStatus.classList.add("connected");
                 statusText.textContent = "Connected";
-                console.info("WebSocket connected. Listening ...");
+                startLatencyCheck();
             } else {
                 connectionStatus.classList.remove("connected");
                 connectionStatus.classList.add("disconnected");
                 statusText.textContent = "Disconnected";
-                console.error("WebSocket disconnected.");
+                latencyText.textContent = "Latency: -- ms";
+                stopLatencyCheck();
+            }
+        }
+
+        function startLatencyCheck() {
+            if (pingInterval) clearInterval(pingInterval);
+            pingInterval = setInterval(() => {
+                const start = performance.now();
+                socket.emit('ping_server');
+                socket.on('pong', (data) => {
+                    const latency = Math.round(performance.now() - start);
+                    latencyText.textContent = `Latency: ${latency} ms`;
+                });
+            }, 1000); // Ping every 1 second
+        }
+
+        function stopLatencyCheck() {
+            if (pingInterval) {
+                clearInterval(pingInterval);
+                pingInterval = null;
             }
         }
 
@@ -142,6 +165,9 @@
         socket.on("disconnect", () => {
             updateConnectionStatus(false);
         });
+
+        // Initial status update (assuming disconnected until confirmed)
+        updateConnectionStatus(false);
 
         // Initial status update (assuming disconnected until confirmed)
         updateConnectionStatus(false);
