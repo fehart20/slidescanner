@@ -16,7 +16,7 @@ RELAY_PIN = 2
 # Setup GPIO mode
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(RELAY_PIN, GPIO.OUT)
-GPIO.output(RELAY_PIN, GPIO.LOW)  # Ensure relay is off at script start
+GPIO.output(RELAY_PIN, GPIO.HIGH)  # Ensure relay is off at script start
 
 # Flag to indicate if the system is currently capturing
 is_capturing = threading.Lock()
@@ -41,11 +41,11 @@ def advance_slide(digi_cam_ip, loops):
         logging.info(f"Advancing slide {loop + 1} of {loops}")
 
         # Activate the relay for 0.25 seconds to advance the projector
-        logging.info("Setting GPIO HIGH to activate relay.")
-        GPIO.output(RELAY_PIN, GPIO.HIGH)
-        time.sleep(0.25)
-        logging.info("Setting GPIO LOW to deactivate relay.")
+        logging.info("Setting GPIO LOW to activate relay.")
         GPIO.output(RELAY_PIN, GPIO.LOW)
+        time.sleep(0.25)
+        logging.info("Setting GPIO HIGH to deactivate relay.")
+        GPIO.output(RELAY_PIN, GPIO.HIGH)
 
         # Wait for the projector to advance the slide
         time.sleep(1.5)
